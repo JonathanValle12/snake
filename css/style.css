@@ -1,0 +1,153 @@
+canvas {
+    display: flex;
+    justify-content: center;
+    margin: auto;
+}
+
+body {
+    background-image: url("../img/fondo_snake.jpg");
+}
+
+h1 {
+    background: linear-gradient(to right, #b9b9b9, #1b1714); /* Agregado un fondo degradado */
+    box-shadow: 0 0 10px 5px rgba(0, 0, 0, 0.2); /* Cambiado el sombreado */
+    width: 50%; /* Aumentado el ancho para que sea más visible */
+    margin: 20px auto;
+    padding: 15px;
+    text-align: center;
+    color: #fff;
+    border-radius: 15px; /* Agregado borde redondeado */
+}
+
+.snake-container {
+    background: linear-gradient(to right, #3f3c3c71, #141414);
+    width: 800px;
+    max-width: 100%;
+    height: 780px;
+    margin: 25px auto;
+    border-radius: 25px;
+
+}
+.snake-container .puntaje {
+    display: flex;
+    justify-content: flex-start;
+    padding: 20px;
+    
+}
+.snake-container img {
+    width: 40px;
+    height: 40px;
+    margin-right: 10px;
+    vertical-align: text-bottom;
+}
+.snake-container span {
+    color: #fff;
+    font-size: 35px;
+}
+
+/* Agrega este código al final de tu archivo style.css */
+.popup-container {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+}
+
+.popup {
+    background: #fff;
+    padding: 20px;
+    text-align: center;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+
+}
+
+.popup button {
+    padding: 10px 20px;
+    margin-top: 15px;
+    background: #61dafb;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+
+.popup-container .close {
+    position: absolute;
+    top: 0;
+    right: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+/* Agrega este código al final de tu archivo style.css */
+#register-button:disabled {
+    border: 1px solid #999999;
+    background-color: #cccccc;
+    color: #666666;
+    cursor:default;
+}
+.score-card {
+    background-color: #1a1a1a;
+    color: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+    text-align: center;
+    width: 300px;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+}
+
+.score-card h2 {
+    margin-bottom: 15px;
+    color: #61dafb;
+}
+
+.score-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.score-card li {
+    margin-bottom: 8px;
+}
+
+.score-card p {
+    margin-top: 15px;
+}
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #61dafb;
+    font-size: 20px;
+    cursor: pointer;
+}
+#scores-container.visible {
+    display: block;
+}
+
+#scores-container {
+    display: none;
+}
+.remove-score {
+    cursor: pointer;
+    color: red;
+    margin-left: 5px;
+    font-size: 14px;
+}
+
+.remove-score:hover {
+    text-decoration: underline;
+}

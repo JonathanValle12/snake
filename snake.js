@@ -1,214 +1,419 @@
-/**
- * Classe que representa el joc de la serp (snake)
- * @class
- */
-class Game {
+const COLORS = {
+	BACKGROUND: "#282c34", // Fondo gris oscuro
+	SNAKE: "#61dafb", // Azul claro
+	FOOD: "#ff6347", // Rojo coral
+	EYE: "#000", // Ojos negros
+	TONGUE: "#e74c3c", // Lengua roja
+  };
+  
+  const DIRECTIONS = {
+	LEFT: "left",
+	RIGHT: "right",
+	UP: "up",
+	DOWN: "down",
+  };
+  
+  class Game {
 
-	// Define el constructor de la clase SnakeGame
-	constructor(width,height,amount) {
-		// Inicialitza las propiedades de la clase
-		this.width = width; // Ancho del canvas
-		this.height = height; // Alto del canvas
-		this.amount = amount; // Número de cuadros que habrá en cada file/columna
-		this.initCanvas(width, height); // Inicialitza el canvas
-		this.start(); // Comienza el juego
-
+	
+	constructor(width, height, amount, containerId) {
+	  this.width = width;
+	  this.height = height;
+	  this.amount = amount;
+	  this.containerId = containerId; // Agrega el ID del contenedor
+	  this.initCanvas();
+	  this.start();
 	}
-
-	initCanvas(width, height) {
-		// Crea el elemento canvas
-		let canvas = document.createElement('canvas');
-
-		// Establecer su ancho y altura
-		canvas.width = width;
-		canvas.height = height;
-
-		// Añadir el canvas al body del documento
-		document.body.appendChild(canvas);
-
-		// Obtener el contexto del dibujo 2D del canvas
-		this.context = canvas.getContext('2d');
+  
+	initCanvas() {
+		this.canvas = document.createElement("canvas");
+		this.canvas.id = "snakeCanvas";
+		this.canvas.width = this.width;
+		this.canvas.height = this.height;
+		document.getElementById(this.containerId).appendChild(this.canvas);
+		this.context = this.canvas.getContext("2d");
 	}
-
-	/**
-	 * Inicialitza els paràmetres del joc:
-	 * Serp al centre, direcció cap a la dreta, puntuació 0
-	 */
+  
+	loadImage(src, callback) {
+	  const image = new Image();
+	  image.onload = () => callback(image);
+	  image.src = src;
+	}
+  
 	start() {
-		// Inicialitza la serpiente vacia
+	  this.initSnake();
+	  this.direction = DIRECTIONS.RIGHT;
+	  this.score = 0;
+	  this.addFood();
+	  this.setupEventListeners();
+	  this.loadAssets();
+	  this.loadBackgroundImage('img/fondo.avif', (backgroundImage) => {
+		this.backgroundImage = backgroundImage;
+		this.gameInterval = setInterval(this.step.bind(this), 100);
+	  });
+	}
+  
+	initSnake() {
 		this.snake = [];
-		// Calcula la posición inicial de la serpiente y la añada al array
-		// La serpiente estará en la mitad de la pantalla y su longitud será la mitad de la cantidad de bloques
-		for(let i = this.amount / 2; i < this.amount / 2 +1; i++){
-			this.snake.push({x: i, y: this.amount /2});
-		}
-		// Establece la dirección inicial a la derecha
-		this.direction = 'right';
-		// Inicialitza la puntuación a 0
-		this.score = 0;
-		// Añade la primera comida al juego
-		this.addFood();
+		// Asegurarse de que la serpiente se inicialice en la primera columna y en la fila central
+		this.snake.push({ x: 0, y: Math.floor(this.amount / 2) });
 	}
-
-	// Dibuixa un quadrat de la mida de la quadrícula (passada al constructor) al canvas
-
+  
 	drawSquare(x, y, color) {
-		// Establece el color de relleno del contexto del canvas
 		this.context.fillStyle = color;
-		// Calcula el tamaño de cada celda del juego
-		let size = this.width/this.amount;
-		// Dibuja un rectangulo en el context del canvas en esas coordenadas
-		this.context.fillRect(x * size, y * size, size, size )
-		
+		const gridSizeX = this.width / this.amount;
+		const gridSizeY = this.height / this.amount;
+		this.context.fillRect(x * gridSizeX, y * gridSizeY, gridSizeX, gridSizeY);
 	}
-	/**
-	 * Neteja el canvas (pinta'l de blanc)
-	 */
+	
+	
+  
 	clear() {
-		// Se establece el color de relleno como azul
-		this.context.fillStyle = "blue";
-		// Se dibuja un rentángulo que cubra todo el canvas usando el color de relleno
-		this.context.fillRect(0, 0, this.width, this.height)
+	  if (this.backgroundImage) {
+		this.context.drawImage(this.backgroundImage, 0, 0, this.width, this.height);
+	  } else {
+		this.context.fillStyle = COLORS.BACKGROUND;
+		this.context.fillRect(0, 0, this.width, this.height);
+	  }
 	}
-
-	/**
-	 * Dibuixa la serp al canvas
-	 */
+  
 	drawSnake() {
-		// Itera por cada parte de la serpiente
-		for (let i = 0; i < this.snake.length; i++) {
-			// Obtiene la posición de la parte de la serpiente actual
-			let x = this.snake[i].x;
-			let y = this.snake[i].y;
-			// Dibuja un cuadrado en la posición actual con el color verde
-			this.drawSquare(x, y, "green");
-		}
-	}
-
-	/**
-	 * Dibuixa la poma al canvas
-	 */
-	drawFood() {
-		// Dibuja un cuadrado rojo en la posición de la comida
-		this.drawSquare(this.food.x, this.food.y, "red");
-	}
-
-	// La serp xoca amb la posició donada?
-	collides(x, y) {
-		for (let i = 0; i < this.snake.length; i++) {
-			// Si la posición (x, y) coincide con la posición de un segmento de la serpiente, devuelve verdadero
-			if (this.snake[i].x === x && this.snake[i].y === y) {
-				return true;
-			}
-		}
-		// Si no hay coincidencias, devuelve falso
-		return false;
-	}
-
-	/**
-	 * Afegeix un menjar a una posició aleatòria, la posició no ha de ser cap de les de la serp
-	 */
-	addFood() {
-		// Genera coordenadas aleatorias para la comida
-		let foodX, foodY;
-		do {
-			foodX = Math.floor(Math.random() * this.amount);
-			foodY = Math.floor(Math.random() * this.amount);
-		} while (this.collides(foodX, foodY)); // Verifica que las coordenadas generadas no colisiones con la serpiente
-		
-		// Asigna las coordenadas generadas a la propiedad 'food' del objeto juego
-		this.food = { x: foodX, y: foodY };
-		// Retorna la comida generada
-		return this.food;
-	}
-
-	// Calcula una nova posició a partir de la ubicació de la serp
-
-	newTile() {
-		let lastTile = this.snake[this.snake.length-1]; // Obtener la última ficha de la serpiente
-		let newX = lastTile.x; // Obtener la posición x de la última ficha
-		let newY = lastTile.y; // Obtener la posición y de la última ficha
-	  
-		switch (this.direction) { // Determinar la dirección en que se mueve la serpiente
-		  case 'left':
-			newX -= 1; // Disminuir la posición x
-			if (newX < 0) { // Si la serpiente sale del borde izquierdo
-			  newX = this.amount - 1; // ajusta la posición a la derecha
-			}
-			break;
-		  case 'right':
-			newX += 1; // Aumentar la posición x
-			if (newX >= this.amount) { // Si la serpiente sale del borde derecho
-			  newX = 0; // ajusta la posición a la izquierda
-			}
-			break;
-		  case 'up':
-			newY -= 1; // Disminuir la posición y
-			if (newY < 0) { // Si la serpiente sale del borde superior
-			  newY = this.amount - 1; // ajusta la posición hacia abajo
-			}
-			break;
-		  case 'down':
-			newY += 1; // Aumentar la posición y
-			if (newY >= this.amount) { // Si la serpiente sale del borde inferior
-			  newY = 0; // ajusta la posición hacia arriba
-			}
-			break;
-		}
-	  
-		this.snake.push({x: newX, y: newY}); // Agregar una nueva ficha a la serpiente con la nueva posicion
-		this.snake.splice(0, 1); // Elimina la ficha más antigua de la serpiente
-	  
-		return this.snake; // Devolver la serpiente actualizada
-	  }
-
-	/**
-	 * Calcula el nou estat del joc, nova posició de la serp, nou menjar si n'hi ha ...
-	 * i ho dibuixa al canvas
-	 */
-	step() {
-		// Obtener la nueva posición de la serpiente y la almacenamos en una variable 
-		let newTile = this.newTile();
-	  
-		// Si la cabeza de la serpiente está en la posición de la comida, la serpiente crece y
-		// Se agrega una nueva comida aleatoria en otra posición
-		if (this.food.x === newTile[0].x && this.food.y === newTile[0].y) {
-		  this.snake.push(this.food);
-		  this.food = this.addFood();
+	  this.snake.forEach(({ x, y }, index) => {
+		if (index === 0) {
+		  this.drawSquare(x, y, "red");
 		} else {
-			// Si no alcanzó la comida, se actualizara la posición de la serpiente eliminando
-			// La ultima posición (la cola) y agregando una nueva posición en la cabeza
-		  this.snake = newTile;
+		  this.drawSquare(x, y, "blue");
 		}
-	  
-		// Limpiamos el canvas y dibujamos la serpiente y la comida en sus nuevas posiciones
-		this.clear();
-		this.drawSnake();
-		this.drawFood();
-	  }
-
-	/**
-	 * Actualitza la direcció de la serp a partir de l'event (tecla dreta, esquerra, amunt, avall)
-	 * @param {event} e - l'event de la tecla premuda
-	 */
-	input(e) {
-		switch(e.keyCode) {
-			case 37:
-				this.direction = "left";
-				break;
-			case 38:
-				this.direction = "up";
-				break;
-			case 39:
-				this.direction = "right";
-				break;
-			case 40:
-				this.direction = "down";
-				break;
+	  });
+	}
+  
+	loadBackgroundImage(src, callback) {
+	  const backgroundImage = new Image();
+	  backgroundImage.onload = () => callback(backgroundImage);
+	  backgroundImage.src = src;
+	}
+  
+	drawHead(x, y) {
+		if (this.headImage) {
+			const imageSize = this.width / this.amount;
+			this.context.drawImage(this.headImage, x * imageSize, y * imageSize, imageSize, imageSize);
+		} else {
+			this.drawSquare(x, y, "red");
 		}
 	}
-} 
+  
+	drawSnakeSegment(x, y) {
+		const sizeX = this.width / this.amount;
+		const sizeY = this.height / this.amount;
+		const borderWidth = 2;
+	
+		this.context.fillStyle = "#61dafb";
+		this.context.fillRect(x * sizeX, y * sizeY, sizeX, sizeY);
+	
+		this.context.strokeStyle = COLORS.SNAKE;
+		this.context.lineWidth = borderWidth;
+		this.context.strokeRect(x * sizeX + borderWidth / 2, y * sizeY + borderWidth / 2, sizeX - borderWidth, sizeY - borderWidth);
+	}
+  
+	drawFood() {
+		if (this.foodImage) {
+			const imageSize = this.width / this.amount;
+			this.context.drawImage(
+				this.foodImage,
+				this.food.x * imageSize,
+				this.food.y * imageSize,
+				imageSize,
+				imageSize
+			);
+		} else {
+			this.drawSquare(this.food.x, this.food.y, COLORS.FOOD);
+		}
+	}
+  
+	collides(x, y) {
+	  return this.snake.some((segment) => segment.x === x && segment.y === y);
+	}
+  
+	addFood() {
+    let foodX, foodY;
+    do {
+        // Asegurarse de que la comida no aparezca en las mismas coordenadas que la serpiente
+        foodX = Math.floor(Math.random() * this.amount);
+        foodY = Math.floor(Math.random() * this.amount);
+    } while (this.collides(foodX, foodY) || this.isFoodOutsideBounds(foodX, foodY));
 
-let game = new Game(300,300,20); // Crea un nou joc
-document.onkeydown = game.input.bind(game); // Assigna l'event de les tecles a la funció input del nostre joc
-window.setInterval(game.step.bind(game),100); // Fes que la funció que actualitza el nostre joc s'executi cada 100ms
+    this.food = { x: foodX, y: foodY };
+}
+
+isFoodOutsideBounds(x, y) {
+    const sizeX = this.width / this.amount;
+    const sizeY = this.height / this.amount;
+
+    // Verifica si la comida está fuera de los límites del juego
+    return x < 0 || x >= this.amount || y < 0 || y >= this.amount ||
+        x * sizeX >= this.width || y * sizeY >= this.height;
+}
+  
+	newTile() {
+		let headX = this.snake[0].x;
+		let headY = this.snake[0].y;
+	
+		switch (this.direction) {
+			case DIRECTIONS.LEFT:
+				headX = (headX - 1);
+				break;
+			case DIRECTIONS.RIGHT:
+				headX = (headX + 1);
+				break;
+			case DIRECTIONS.UP:
+				headY = (headY - 1);
+				break;
+			case DIRECTIONS.DOWN:
+				headY = (headY + 1);
+				break;
+		}
+	
+		return { x: headX, y: headY };
+	}
+  
+	step() {
+	  let newHead = this.newTile();
+  
+	  // Verifica si la cabeza de la serpiente está fuera de los límites
+	  if (
+        newHead.x < 0 ||
+        newHead.x >= this.amount ||
+        newHead.y < 0 ||
+        newHead.y >= this.amount ||
+        this.collides(newHead.x, newHead.y)
+    ) {
+        clearInterval(this.gameInterval);
+        showPopup(this.score);
+        return;
+    }
+  
+	  this.snake.unshift(newHead);
+  
+	  if (this.food && this.food.x === newHead.x && this.food.y === newHead.y) {
+		this.addFood();
+		this.score++; // Incrementa la puntuación
+		// Actualiza el contenido del elemento span con la puntuación actualizada
+		document.getElementById("puntuacion").innerText = this.score;
+
+	  } else {
+		this.snake.pop();
+	  }
+  
+	  this.clear();
+	  this.drawSnake();
+	  this.drawFood();
+	}
+  
+	setupEventListeners() {
+	  document.addEventListener("keydown", this.input.bind(this));
+	}
+  
+	input(e) {
+	  switch (e.keyCode) {
+		case 37:
+		  if (this.direction !== DIRECTIONS.RIGHT) {
+			this.direction = DIRECTIONS.LEFT;
+		  }
+		  break;
+		case 38:
+		  if (this.direction !== DIRECTIONS.DOWN) {
+			this.direction = DIRECTIONS.UP;
+		  }
+		  break;
+		case 39:
+		  if (this.direction !== DIRECTIONS.LEFT) {
+			this.direction = DIRECTIONS.RIGHT;
+		  }
+		  break;
+		case 40:
+		  if (this.direction !== DIRECTIONS.UP) {
+			this.direction = DIRECTIONS.DOWN;
+		  }
+		  break;
+	  }
+	}
+  
+	loadAssets() {
+        // Primero, carga la imagen de fondo
+        this.loadBackgroundImage('img/fondo.avif', (backgroundImage) => {
+            this.backgroundImage = backgroundImage;
+
+            // Después, carga la imagen de la comida
+            this.loadImage('img/manzana.png', (image) => {
+                this.foodImage = image;
+                this.clear();
+                this.drawSnake();
+                this.drawFood();
+            });
+        });
+    }
+
+	 // Nueva función para detener el juego
+	 stop() {
+        clearInterval(this.gameInterval);
+    }
+
+    // Nueva función para reiniciar el juego
+    restart() {
+        this.stop();
+        this.initSnake();
+        this.direction = DIRECTIONS.RIGHT;
+        this.score = 0;
+        this.addFood();
+        this.clear();
+        this.drawSnake();
+        this.drawFood();
+        this.gameInterval = setInterval(this.step.bind(this), 100);
+    }
+}
+
+let game = new Game(650, 650, 20, "snake-container");
+
+function openNameModal() {
+    const nameModalContainer = document.getElementById("name-modal-container");
+    nameModalContainer.style.display = "flex";
+}
+
+function closeNameModal() {
+    const nameModalContainer = document.getElementById("name-modal-container");
+    nameModalContainer.style.display = "none";
+}
+
+function showPopup(score) {
+    const popupContainer = document.getElementById("popup-container");
+    const finalScore = document.getElementById("final-score");
+    finalScore.innerText = score;
+    popupContainer.style.display = "flex";
+
+	if (game.score >= 5) {
+		// Habilita el botón de "Registrar Puntuación"
+		const registerButton = document.getElementById("register-button");
+		registerButton.disabled = false;
+	}
+}
+
+function restartGame() {
+    const popupContainer = document.getElementById("popup-container");
+    popupContainer.style.display = "none";
+    
+    // Inicia el juego
+    game.restart();
+
+	// Habilita el botón de "Registrar Puntuación"
+	const registerButton = document.getElementById("register-button");
+	registerButton.disabled = true;
+    // Actualiza el contenido del elemento span con la puntuación reiniciada
+    document.getElementById("puntuacion").innerText = game.score;
+}
+
+function saveScore() {
+
+	openNameModal();
+    const userNameInput = document.getElementById("username");
+    const userName = userNameInput.value.trim();
+
+    if (userName !== "") {
+        const currentScores = JSON.parse(localStorage.getItem("snakeScores")) || [];
+        
+        // Verifica si ya existe una puntuación para el mismo usuario
+        const existingScoreIndex = currentScores.findIndex(score => score.userName === userName);
+
+        if (existingScoreIndex !== -1) {
+            const existingScore = currentScores[existingScoreIndex];
+            
+            // Si la puntuación actual es mayor que la existente, actualiza la puntuación
+            if (game.score > existingScore.score) {
+                existingScore.score = game.score;
+                alert(`Puntuación actualizada para ${userName}!`);
+            } else {
+                alert(`Ya existe una puntuación para ${userName} con una puntuación igual o mayor.`);
+            }
+        } else {
+            // Agrega la nueva puntuación solo si no existe una puntuación para el mismo usuario
+            currentScores.push({ userName, score: game.score });
+            alert(`Puntuación guardada para ${userName}!`);
+        }
+
+        // Ordena y limita el arreglo de puntuaciones
+        currentScores.sort((a, b) => b.score - a.score);
+        const maxScoresToKeep = 5;
+        const trimmedScores = currentScores.slice(0, maxScoresToKeep);
+
+		localStorage.setItem("snakeScores", JSON.stringify(trimmedScores));
+		console.log("Nuevas puntuaciones guardadas:", trimmedScores);
+
+        
+        closeNameModal(); // Cierra el modal después de guardar la puntuación
+    } else {
+        alert("Por favor, introduce tu nombre de usuario.");
+    }
+}
+function openStartModal() {
+    const startModalContainer = document.getElementById("start-modal-container");
+    startModalContainer.style.display = "flex";
+    // Detener el juego al abrir el modal
+    game.stop();
+}
+
+function startGame() {
+    const startModalContainer = document.getElementById("start-modal-container");
+    startModalContainer.style.display = "none";
+    
+    // Iniciar el juego cuando se hace clic en "Comenzar"
+    game.restart();
+}
+
+let scoresVisible = false; // Nuevo estado para rastrear si los puntajes están visibles
+
+function showScores() {
+    const scoresContainer = document.getElementById("scores-container");
+    scoresContainer.innerHTML = ""; // Limpia el contenido anterior
+
+    const scores = JSON.parse(localStorage.getItem("snakeScores")) || [];
+
+    let scoresHTML = "<div class='score-card'>";
+    scoresHTML += "<h2>Puntuaciones</h2>";
+    scoresHTML += "<button class='close-button' onclick='toggleScores()'>X</button>";
+    
+    if (scores.length > 0) {
+        scoresHTML += "<ul>";
+        scores.forEach((score, index) => {
+            scoresHTML += `<li>${score.userName}: ${score.score} <span class='remove-score' onclick='removeScore(${index})'>❌</span></li>`;
+        });
+        scoresHTML += "</ul>";
+    } else {
+        scoresHTML += "<p>No hay puntuaciones registradas.</p>";
+    }
+    scoresHTML += "</div>";
+
+    // Añade el contenido al contenedor
+    scoresContainer.innerHTML = scoresHTML;
+
+    scoresContainer.classList.add('visible'); // Agrega la clase 'visible'
+    scoresVisible = true; // Actualiza el estado
+}
+function removeScore(index) {
+    const currentScores = JSON.parse(localStorage.getItem("snakeScores")) || [];
+
+    // Elimina la puntuación en el índice dado
+    currentScores.splice(index, 1);
+
+    // Actualiza el almacenamiento local con las puntuaciones actualizadas
+    localStorage.setItem("snakeScores", JSON.stringify(currentScores));
+
+    // Vuelve a mostrar las puntuaciones
+    showScores();
+}
+function toggleScores() {
+    let scoresContainer = document.getElementById('scores-container');
+    scoresContainer.classList.toggle('visible'); // Usa toggle para alternar la clase
+    scoresVisible = !scoresVisible; // Invierte el estado
+}
+
+// Llama a openStartModal al cargar la página
+window.onload = openStartModal;

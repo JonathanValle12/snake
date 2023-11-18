@@ -2,9 +2,50 @@
 <html lang="ca">
 	<meta charset="UTF-8">
 	<title>La serp</title>
+	<link rel="stylesheet" href="css/style.css">
 	<body>
-		<h1 style="margin: 15px 20px;">Joc Serp</h1>
+		
+
+		<!-- Modal de inicio -->
+		<div id="start-modal-container" class="popup-container">
+			<div class="popup">
+				<h2>Bienvenido al Juego de la Serpiente</h2>
+				<p>Haz clic en "Comenzar" para iniciar el juego.</p>
+				<button onclick="startGame()">Comenzar</button>
+				<button onclick="showScores()">Ver Puntuaciones</button>
+
+			</div>
+			<!-- Agrega este contenedor en tu HTML -->
+			<div id="scores-container"></div>
+		</div>
+		<h1>Joc Serp</h1>
 		<hr>
+		<div id="snake-container" class="snake-container">
+			<div class="puntaje">
+				<img src="img/manzana.png" alt=""><span id="puntuacion">0</span>
+			</div>
+		</div>
+
+		<!-- Agrega este código justo antes de cerrar el cuerpo -->
+		<div id="popup-container" class="popup-container">
+			<div class="popup">
+				<h2>¡Perdiste!</h2>
+				<p>Tu puntuación: <span id="final-score"></span></p>
+				<button id="register-button" onclick="openNameModal()" disabled>Registrar Puntuación</button>
+				<button onclick="restartGame()">Jugar de nuevo</button>
+			</div>
+		</div>
+
+		<!-- Segundo modal para ingresar el nombre de usuario -->
+		<div id="name-modal-container" class="popup-container">
+			<div class="popup">
+				<h2>Ingresa tu nombre de usuario</h2>
+				<label for="username">Nombre de usuario:</label>
+				<input type="text" id="username" placeholder="Tu nombre de usuario">
+				<button onclick="saveScore()">Guardar Puntuación</button>
+				<p class="close" onclick="closeNameModal()">X</p>
+			</div>
+		</div>
 		<script src="snake.js"></script>
 	</body>
 </html>
