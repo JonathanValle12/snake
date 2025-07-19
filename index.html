@@ -5,9 +5,10 @@
 	<link rel="stylesheet" href="css/style.css">
 	<body>
 		
+		<div class="fondo-estrellas"></div>
 
 		<!-- Modal de inicio -->
-		<div id="start-modal-container" class="popup-container">
+<!-- 		<div id="start-modal-container" class="popup-container">
 			<div class="popup">
 				<h2>Bienvenido al Juego de la Serpiente</h2>
 				<p>Haz clic en "Comenzar" para iniciar el juego.</p>
@@ -15,16 +16,44 @@
 				<button onclick="showScores()">Ver Puntuaciones</button>
 
 			</div>
-			<!-- Agrega este contenedor en tu HTML -->
+
 			<div id="scores-container"></div>
+		</div> -->
+
+		<div class="barra barra-izquierda">
+			<div class="linea"></div>
+			<div class="linea"></div>
+			<div class="linea"></div>
 		</div>
-		<h1>LA SERPIENTE (SNAKE)</h1>
-		<hr>
-		<div id="snake-container" class="snake-container">
-			<div class="puntaje">
-				<img src="img/manzana.png" alt=""><span id="puntuacion">0</span>
+
+		<div class="barra barra-derecha">
+			<div class="linea"></div>
+			<div class="linea"></div>
+			<div class="linea"></div>
+		</div>
+
+		<h1>El juego de la serpiente</h1>
+
+		<main>
+			<div class="contenedor-borde01">
+
+				<div class="linea linea-top-left"></div>
+				<div class="linea linea-top-right"></div>
+				<div class="linea linea-bottom-left"></div>
+				<div class="linea linea-bottom-right"></div>
+
+				<div class="contenedor-borde02">
+					<div id="snake-container" class="snake-container">
+					<div class="puntaje">
+						<h2>Consola</h2>
+						<div>
+							<img src="img/manzana.png" alt=""><span id="puntuacion">0</span>
+						</div>
+					</div>
+				</div>
+				</div>
 			</div>
-		</div>
+		</main>
 
 		<!-- Agrega este código justo antes de cerrar el cuerpo -->
 		<div id="popup-container" class="popup-container">
@@ -35,6 +64,7 @@
 				<button onclick="restartGame()">Jugar de nuevo</button>
 			</div>
 		</div>
+
 
 		<!-- Segundo modal para ingresar el nombre de usuario -->
 		<div id="name-modal-container" class="popup-container">

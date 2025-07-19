@@ -39,7 +39,6 @@ class Game {
 		this.gameInterval = setInterval(this.step.bind(this), 100);
 	  });
 	}
-  
 	initSnake() {
 		this.snake = [];
 		// Asegurarse de que la serpiente se inicialice en la primera columna y en la fila central
