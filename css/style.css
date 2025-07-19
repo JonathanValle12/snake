@@ -2,6 +2,12 @@
     --linea-color: #0C8460;
 }
 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 canvas {
     display: flex;
     justify-content: center;
@@ -17,31 +23,35 @@ body {
     color: #fff;
 }
 
-.fondo-estrellas {
+.estrellas {
     position: fixed;
     top: 0;
     left: 0;
-    width: 200%;
-    height: 200%;
-    background-image:
-        radial-gradient(white 1px, transparent 0),
-        radial-gradient(white 1px, transparent 0),
-        radial-gradient(white 1px, transparent 0);
-    background-size: 33% 33%;
-    background-position: 0 0, 50% 50%, 100% 100%;
-    animation: subirEstrellas 120s linear infinite;
-    opacity: 0.1;
-    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
     pointer-events: none;
 }
 
-@keyframes subirEstrellas {
+.estrella {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background-color: white;
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: subir 20s linear infinite;
+}
+
+@keyframes subir {
     0% {
         transform: translateY(0);
+        opacity: 0.8;
     }
 
     100% {
-        transform: translateY(-50%);
+        transform: translateY(-100vh);
+        opacity: 0;
     }
 }
 
@@ -78,28 +88,24 @@ body {
 }
 
 h1 {
-    background-color: rgba(54, 226, 161, 0.05);
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(54, 226, 161, 0.3), 0 0 20px rgba(54, 226, 161, 0.2) inset;
-    border: 1px solid rgba(54, 226, 161, 0.2);
-    width: 90%;
+    width: 100%;
 
-    max-width: 710px;
-    margin: 20px auto;
+    margin: auto;
+    margin-top: 100px;
     padding: 15px;
     text-align: center;
-    color: #34D399;
+    color: #02ffa2;
     font-size: 50px;
     text-transform: uppercase;
     font-weight: bold;
-    backdrop-filter: blur(4px);
 }
 
 main {
-    width: 480px;
+    width: 485px;
     max-width: 100%;
-    height: 780px;
-    margin: 25px auto;
+    height: 100%;
+    margin: 15px auto;
 
     .contenedor-borde01 {
         background-color: #111827;
@@ -107,6 +113,8 @@ main {
         border-radius: 10px;
         padding: 25px;
         position: relative;
+
+        box-shadow: 0 10px 16px -8px rgba(16, 185, 129, .3), 0 3px 5px rgba(0, 0, 0, 0.15);
 
         .linea {
             position: absolute;
@@ -150,116 +158,144 @@ main {
             border: 1px solid #B7D4CE;
             border-radius: 5px;
 
+            h2 {
+                color: #02ffa2;
+                font-size: 33px;
+            }
+
+            .puntaje {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 10px 20px 15px 20px;
+                border-bottom: 1px solid #1F2937;
+
+                img {
+                    width: 25px;
+                    height: 25px;
+                    margin-right: 10px;
+                    vertical-align: text-bottom;
+                }
+
+                span {
+                    color: #fff;
+                    font-size: 25px;
+                    font-family: "Rubik", "Quicksand", "Poppins", sans-serif;
+                }
+            }
+
             .snake-container {
                 padding-bottom: 15px;
-
-                .puntaje {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 0 20px;
-                    border-bottom: 1px solid #1F2937;
-
-                    img {
-                        width: 25px;
-                        height: 25px;
-                        margin-right: 10px;
-                        vertical-align: text-bottom;
-                    }
-
-                    span {
-                        color: #fff;
-                        font-size: 25px;
-                    }
-                }
+                position: relative;
 
                 canvas {
                     margin-top: 15px;
                     border-radius: 10px;
-                    border: 1px solid #111827;
-                    background-color: rgb(0, 0, 0);
-                    
+                    border: 2px solid #1F2937;
+
+                }
+
+                .menu-principal {
+
+                    position: absolute;
+                    top: 0;
+                    height: 100%;
+                    width: 100%;
+
+                    .contenido-menu {
+                        background-color: #121928;
+                        border-bottom-left-radius: 10px;
+                        border-bottom-right-radius: 10px;
+                        width: 100%;
+                        height: 100%;
+                        padding: 0 20px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 15px;
+
+                        .icono-trofeo {
+                            color: gold;
+                            font-size: 20px;
+                            margin-right: 8px;
+                        }
+
+                        .texto-label {
+                            font-size: 22px;
+                            font-weight: bold;
+                        }
+
+                        .texto-score {
+                            font-size: 35px;
+                            font-weight: bold;
+                            color: #33cc88;
+
+                        }
+
+                        .botones {
+                            display: flex;
+                            gap: 15px;
+
+                            button {
+                                padding: 10px 20px;
+                                margin-top: 15px;
+                                color: #e5e7eb;
+                                border: none;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-weight: bold;
+
+                                &:nth-of-type(1) {
+                                    background-color: #059669;
+
+                                    &:hover {
+                                        background-color: #06815a;
+                                    }
+                                }
+
+                                &:nth-of-type(2) {
+                                    background-color: transparent;
+                                    border: 1px solid #4B5563;
+
+                                    &:hover {
+                                        background-color: #4B5563;
+                                    }
+                                }
+
+                                i {
+                                    margin-right: 10px;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-/* Agrega este código al final de tu archivo style.css */
-/* .popup-container {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    justify-content: center;
-    align-items: center;
-}
 
-.popup {
-    background: #fff;
-    padding: 20px;
-    text-align: center;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    position: relative;
+    .configuracion {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        align-items: center;
+        margin-top: 30px;
+        color: #9CA3AF;
 
-}
+        i {
+            margin-right: 15px;
+            font-size: 12px;
+        }
 
-.popup-container input {
-    width: 100%;
-    padding: 10px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
-    outline: none;
-
-}
-
-.popup label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.popup button {
-    padding: 10px 20px;
-    margin-top: 15px;
-    background: #61dafb;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-.popup button:hover {
-    background: #2fabcd;
-    transition: all .5s;
-}
-
-.popup-container .close {
-    position: absolute;
-    top: 0;
-    right: 15px;
-    font-weight: bold;
-    cursor: pointer;
-}
-
-  Agrega este código al final de tu archivo style.css
-#register-button:disabled {
-    border: 1px solid #999999;
-    background-color: #cccccc;
-    color: #666666;
-    cursor: default;
-}
- */
-#scores-container.visible {
-    display: block;
-}
-
-#scores-container {
-    display: none;
+        span {
+            padding: 10px 15px;
+            border-radius: 5px;
+            &:hover {
+                color: #34d399;
+                background-color: #1f2937;
+                cursor: pointer;
+            }
+        }
+    }
 }

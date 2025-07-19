@@ -1,146 +1,103 @@
+
 // Clase PopUps
 class Popups {
-    constructor() {
-        // Agregar scoresVisible como propiedad de la clase
+    constructor(game) {
+        this.game = game;
         this.scoresVisible = false;
+        this.menuListeners();
     }
 
-    openNameModal() {
-        const nameModalContainer = document.getElementById("name-modal-container");
-        nameModalContainer.style.display = "flex";
+    menuListeners() {
+        const menuButtons = document.getElementById("menu-buttons");
+
+        menuButtons.addEventListener("click", (e) => {
+            const classList = e.target.classList;
+
+            if (classList.contains("btn-jugar")) this.startGame();
+            else if (classList.contains("btn-puntuaciones")) this.showScores();
+            else if (classList.contains("btn-volver")) this.updateMenu("end", this.game?.score ?? 0);
+        });
     }
-    
-    closeNameModal() {
-        const nameModalContainer = document.getElementById("name-modal-container");
-        nameModalContainer.style.display = "none";
-    }
-    
-    showPopup(score) {
-        const popupContainer = document.getElementById("popup-container");
-        const finalScore = document.getElementById("final-score");
-        finalScore.innerText = score;
-        popupContainer.style.display = "flex";
-    
-        if (game.score >= 5) {
-            // Habilita el botón de "Registrar Puntuación"
-            const registerButton = document.getElementById("register-button");
-            registerButton.disabled = false;
-        }
-    }
-    
-    restartGame() {
-        const popupContainer = document.getElementById("popup-container");
-        popupContainer.style.display = "none";
-        
-        // Inicia el juego
-        game.restart();
-    
-        // Habilita el botón de "Registrar Puntuación"
-        const registerButton = document.getElementById("register-button");
-        registerButton.disabled = true;
-        // Actualiza el contenido del elemento span con la puntuación reiniciada
-        document.getElementById("puntuacion").innerText = game.score;
-    }
-    
-    saveScore() {
-    
-        openNameModal();
-        const userNameInput = document.getElementById("username");
-        const userName = userNameInput.value.trim();
-    
-        if (userName !== "") {
-            const currentScores = JSON.parse(localStorage.getItem("snakeScores")) || [];
-            
-            // Verifica si ya existe una puntuación para el mismo usuario
-            const existingScoreIndex = currentScores.findIndex(score => score.userName === userName);
-    
-            if (existingScoreIndex !== -1) {
-                const existingScore = currentScores[existingScoreIndex];
-                
-                // Si la puntuación actual es mayor que la existente, actualiza la puntuación
-                if (game.score > existingScore.score) {
-                    existingScore.score = game.score;
-                    alert(`Puntuación actualizada para ${userName}!`);
-                } else {
-                    alert(`Ya existe una puntuación para ${userName} con una puntuación igual o mayor.`);
-                }
-            } else {
-                // Agrega la nueva puntuación solo si no existe una puntuación para el mismo usuario
-                currentScores.push({ userName, score: game.score });
-                alert(`Puntuación guardada para ${userName}!`);
-            }
-    
-            // Ordena y limita el arreglo de puntuaciones
-            currentScores.sort((a, b) => b.score - a.score);
-            const maxScoresToKeep = 5;
-            const trimmedScores = currentScores.slice(0, maxScoresToKeep);
-    
-            localStorage.setItem("snakeScores", JSON.stringify(trimmedScores));
-    
-            
-            closeNameModal(); // Cierra el modal después de guardar la puntuación
-        } else {
-            alert("Por favor, introduce tu nombre de usuario.");
-        }
-    }
-    startGame() {
-        const startModalContainer = document.getElementById("start-modal-container");
-        startModalContainer.style.display = "none";
-        
-        // Iniciar el juego cuando se hace clic en "Comenzar"
-        game.restart();
-    }
+
     openStartModal() {
-        const startModalContainer = document.getElementById("start-modal-container");
-        startModalContainer.style.display = "flex";
-        // Detener el juego al abrir el modal
-        game.stop();
+        this.updateMenu("start");
+        this.game.stop();
     }
-    
-    showScores() {
-        const scoresContainer = document.getElementById("scores-container");
-        scoresContainer.innerHTML = ""; // Limpia el contenido anterior
-    
-        const scores = JSON.parse(localStorage.getItem("snakeScores")) || [];
-    
-        let scoresHTML = "<div class='score-card'>";
-        scoresHTML += "<h2>Puntuaciones</h2>";
-        scoresHTML += "<button class='close-button' onclick='toggleScores()'>X</button>";
-        
-        if (scores.length > 0) {
-            scoresHTML += "<ul>";
-            scores.forEach((score, index) => {
-                scoresHTML += `<li>${score.userName}: ${score.score} <span class='remove-score' onclick='removeScore(${index})'>❌</span></li>`;
-            });
-            scoresHTML += "</ul>";
-        } else {
-            scoresHTML += "<p>No hay puntuaciones registradas.</p>";
+
+    startGame() {
+        const startModalContainer = document.getElementById("menu-principal");
+        startModalContainer.style.display = "none";
+
+        document.getElementById("puntuacion").innerText = 0;
+
+        this.game.restart();
+    }
+
+    showPopup(score) {
+        this.updateMenu("end", score);
+    }
+
+    saveScore(score) {
+        const bestScore = Number(localStorage.getItem('bestScore')) || 0;
+
+        if (score > bestScore) {
+            localStorage.setItem('bestScore', score);
         }
-        scoresHTML += "</div>";
-    
-        // Añade el contenido al contenedor
-        scoresContainer.innerHTML = scoresHTML;
-    
-        scoresContainer.classList.add('visible'); // Agrega la clase 'visible'
-        this.scoresVisible = true; // Actualiza el estado
     }
-    
-    removeScore(index) {
-        const currentScores = JSON.parse(localStorage.getItem("snakeScores")) || [];
-    
-        // Elimina la puntuación en el índice dado
-        currentScores.splice(index, 1);
-    
-        // Actualiza el almacenamiento local con las puntuaciones actualizadas
-        localStorage.setItem("snakeScores", JSON.stringify(currentScores));
-    
-        // Vuelve a mostrar las puntuaciones
-        showScores();
+
+    showScores() {
+        this.updateMenu("scores");
     }
-    toggleScores() {
-        let scoresContainer = document.getElementById('scores-container');
-        scoresContainer.classList.toggle('visible'); // Usa toggle para alternar la clase
-        this.scoresVisible = !this.scoresVisible; // Invierte el estado
+
+    updateMenu(type, score = 0) {
+        const title = document.getElementById('menu-title');
+        const description = document.getElementById('menu-description');
+        const buttonsContainer = document.getElementById('menu-buttons');
+
+        if (!title || !description || !buttonsContainer) return;
+
+        switch (type) {
+            case "start":
+                title.innerText = "¡Bienvenido!";
+                description.innerText = "Usa las flechas para mover la serpiente.";
+                buttonsContainer.innerHTML = `
+                    <button class="btn-jugar"><i class="fas fa-play"></i> Jugar</button>
+                <button class="btn-puntuaciones"><i class="fas fa-trophy"></i> Puntuaciones</button>
+                `;
+
+                break;
+            case "end":
+                title.innerText = "Fin del Juego";
+                description.innerText = "Puntuación: " + score;
+                buttonsContainer.innerHTML = `
+                    <button class="btn-jugar"><i class="fas fa-redo"></i> Reintentar</button>
+                    <button class="btn-puntuaciones"><i class="fas fa-trophy"></i> Puntuaciones</button>
+                `;
+                break;
+
+            case "scores":
+                const bestScore = Number(localStorage.getItem("bestScore")) || 0;
+
+                console.log(bestScore);
+                title.innerText = "Puntuaciones";
+                description.innerHTML = `
+                    <i class="fas fa-trophy icono-trofeo"></i>
+                    <span class="texto-label">Más Alta:</span>
+                    <span class="texto-score">${bestScore}</span>
+                `;
+                buttonsContainer.innerHTML = `
+                    <button class="btn-volver"><i class="fas fa-arrow-left"></i> Volver</button>
+                `;
+                break;
+
+            case "options":
+                title.innerText = "Opciones";
+        }
+
+        const menu = document.getElementById("menu-principal");
+
+        if (menu) menu.style.display = "flex";
+
     }
 }
 

@@ -1,73 +1,95 @@
 <!DOCTYPE html>
 <html lang="ca">
+
+<head>
 	<meta charset="UTF-8">
 	<title>La serp</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="css/style.css">
-	<body>
-		
-		<div class="fondo-estrellas"></div>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-		<!-- Modal de inicio -->
-<!-- 		<div id="start-modal-container" class="popup-container">
-			<div class="popup">
-				<h2>Bienvenido al Juego de la Serpiente</h2>
-				<p>Haz clic en "Comenzar" para iniciar el juego.</p>
-				<button onclick="startGame()">Comenzar</button>
-				<button onclick="showScores()">Ver Puntuaciones</button>
+</head>
 
-			</div>
+<body>
 
-			<div id="scores-container"></div>
-		</div> -->
+	<div class="estrellas">
+		<div class="estrella" style="top: 60vh; left: 10vw;"></div>
+		<div class="estrella" style="top: 80vh; left: 30vw;"></div>
+		<div class="estrella" style="top: 55vh; left: 70vw;"></div>
+		<div class="estrella" style="top: 90vh; left: 50vw;"></div>
+		<div class="estrella" style="top: 75vh; left: 85vw;"></div>
+		<div class="estrella" style="top: 65vh; left: 20vw;"></div>
+		<div class="estrella" style="top: 95vh; left: 60vw;"></div>
+		<div class="estrella" style="top: 58vh; left: 40vw;"></div>
+		<div class="estrella" style="top: 85vh; left: 15vw;"></div>
+		<div class="estrella" style="top: 78vh; left: 90vw;"></div>
+	</div>
 
-		<div class="barra barra-izquierda">
-			<div class="linea"></div>
-			<div class="linea"></div>
-			<div class="linea"></div>
-		</div>
+	<div class="barra barra-izquierda">
+		<div class="linea"></div>
+		<div class="linea"></div>
+		<div class="linea"></div>
+	</div>
 
-		<div class="barra barra-derecha">
-			<div class="linea"></div>
-			<div class="linea"></div>
-			<div class="linea"></div>
-		</div>
+	<div class="barra barra-derecha">
+		<div class="linea"></div>
+		<div class="linea"></div>
+		<div class="linea"></div>
+	</div>
 
-		<h1>El juego de la serpiente</h1>
+	<h1>El juego de la serpiente</h1>
 
-		<main>
-			<div class="contenedor-borde01">
+	<main>
+		<div class="contenedor-borde01">
 
-				<div class="linea linea-top-left"></div>
-				<div class="linea linea-top-right"></div>
-				<div class="linea linea-bottom-left"></div>
-				<div class="linea linea-bottom-right"></div>
+			<div class="linea linea-top-left"></div>
+			<div class="linea linea-top-right"></div>
+			<div class="linea linea-bottom-left"></div>
+			<div class="linea linea-bottom-right"></div>
 
-				<div class="contenedor-borde02">
-					<div id="snake-container" class="snake-container">
-					<div class="puntaje">
-						<h2>Consola</h2>
-						<div>
-							<img src="img/manzana.png" alt=""><span id="puntuacion">0</span>
+			<div class="contenedor-borde02">
+				<div class="puntaje">
+					<h2>Consola</h2>
+					<div>
+						<img src="img/manzana.png" alt=""><span id="puntuacion">0</span>
+					</div>
+				</div>
+				<div id="snake-container" class="snake-container">
+					<!-- Aqui va el modal integrado -->
+					<div id="menu-principal" class="menu-principal">
+						<div class="contenido-menu">
+							<h2 id="menu-title">¡Bienvenido!</h2>
+							<p id="menu-description">Usa las flechas para mover la serpiente.</p>
+							<div class="botones" id="menu-buttons">
+								<button class="btn-jugar" onclick="startGame()"><i class="fas fa-play"></i> Jugar</button>
+								<button class="btn-puntuaciones" onclick="showScores()"><i class="fas fa-trophy"></i> Puntuaciones</button>
+							</div>
+
 						</div>
 					</div>
 				</div>
-				</div>
 			</div>
-		</main>
+		</div>
 
-		<!-- Agrega este código justo antes de cerrar el cuerpo -->
-		<div id="popup-container" class="popup-container">
+		<div class="configuracion">
+			<span class="btn-opciones" onclick="options()"><i class="fas fa-gear"></i>Opciones</span>
+			<span><i class="fas fa-volume-up"></i>Sonido</span>
+		</div>
+	</main>
+
+	<!-- Agrega este código justo antes de cerrar el cuerpo -->
+	<!-- 		<div id="popup-container" class="popup-container">
 			<div class="popup">
 				<h2>¡Perdiste!</h2>
 				<p>Tu puntuación: <span id="final-score"></span></p>
 				<button id="register-button" onclick="openNameModal()" disabled>Registrar Puntuación</button>
 				<button onclick="restartGame()">Jugar de nuevo</button>
 			</div>
-		</div>
+		</div> -->
 
 
-		<!-- Segundo modal para ingresar el nombre de usuario -->
-		<div id="name-modal-container" class="popup-container">
+	<!-- Segundo modal para ingresar el nombre de usuario -->
+	<!-- 	<div id="name-modal-container" class="popup-container">
 			<div class="popup">
 				<h2>Ingresa tu nombre de usuario</h2>
 				<label for="username">Nombre de usuario:</label>
@@ -75,7 +97,8 @@
 				<button onclick="saveScore()">Guardar Puntuación</button>
 				<p class="close" onclick="closeNameModal()">X</p>
 			</div>
-		</div>
-		<script type="module" src="snake.js"></script>
-	</body>
+		</div> -->
+	<script type="module" src="snake.js"></script>
+</body>
+
 </html>
