@@ -1,22 +1,47 @@
-// Importaciónes para construir todo el SNAKE
-import Game from "./game.js";
-import Popups from "./popups.js";
+import Game from './game.js';
+import Popups from './popups.js';
 
-const game = new Game(650, 650, 20, "snake-container");
-const popups = new Popups(); // Crear una instancia de la clase Popups
+const initialDifficulty = "normal";
+let soundEnabled = true;
 
-window.game = game; // Hacer el juego globalmente accesible
+const game = new Game(400, 400, 20, 'snake-container');
+const popups = new Popups(game);
 
-window.startGame = popups.startGame.bind(popups);
-window.openNameModal = popups.openNameModal.bind(popups); // Usar bind para mantener el contexto
-window.closeNameModal = popups.closeNameModal.bind(popups);
-window.showPopup = popups.showPopup.bind(popups);
-window.restartGame = popups.restartGame.bind(popups);
-window.saveScore = popups.saveScore.bind(popups);
-window.openStartModal = popups.openStartModal.bind(popups);
-window.showScores = popups.showScores.bind(popups);
-window.removeScore = popups.removeScore.bind(popups);
-window.toggleScores = popups.toggleScores.bind(popups);
+game.setDifficulty(initialDifficulty);
 
-// Llama a openStartModal al cargar la página
-window.onload = popups.openStartModal.bind(popups);
+// Se ejecuta cuando el jugador pierde
+game.onGameOver = () => {
+
+  popups.saveScore(game.score);
+  popups.showPopup(game.score);
+};
+
+// Utilidad para evitar repetir codigo al agregar listeners
+const addClickListener = (selector, callback) => {
+  const btn = document.querySelector(selector);
+  if (btn) btn.addEventListener('click', callback);
+}
+
+const toggleSound = () => {
+
+  soundEnabled = !soundEnabled;
+
+  for (const sonido of Object.values(game.sonidos)) {
+    sonido.muted = !soundEnabled;
+  }
+
+  const icon = document.querySelector('.toggle-sonido i');
+  if (!icon) return;
+
+  icon.classList.toggle('fa-volume-mute', !soundEnabled);
+  icon.classList.toggle('fa-volume-up', soundEnabled);
+  
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  popups.openStartModal();
+
+  addClickListener('.btn-opciones', () => popups.updateMenu('options'));
+  addClickListener('.toggle-sonido', toggleSound);
+
+});
