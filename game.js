@@ -1,19 +1,75 @@
 import DIRECTIONS from "./directions.js";
 
+const DIFICULTADES = {
+	fácil: 160,
+	normal: 100,
+	difícil: 70
+}
+
 class Game {
 
 
 	constructor(width, height, amount, containerId) {
+		// Dimensiones y configuración inicial
 		this.width = width;
 		this.height = height;
 		this.amount = amount;
-		this.containerId = containerId; // Agrega el ID del contenedor
-		this.initCanvas();
-		this.start();
+		this.containerId = containerId;
 
+		// Estado del Juego
+		this.speed = DIFICULTADES.normal;
+		this.isPlaying = false;
+		this.isGameOver = false;
+		this.paused = false;
+
+		// Configuración Visual
+		this.noWalls = false;
+		this.showGrid = true;
+		this.snakeColor = {
+			fill: "#10b981",
+			stroke: "#059669"
+		};
+
+		// Funcion extra (Lo uso desde snake.js)
 		this.onGameOver = null;
+
+		this.initCanvas();
+		this.initSounds();
+
 	}
 
+	/* Getters */
+	get cellSizeX() {
+		return this.width / this.amount;
+	}
+
+	get cellSizeY() {
+		return this.height / this.amount;
+	}
+
+	/* Configuración */
+	setDifficulty(dificultad) {
+		this.dificultad = dificultad;
+
+		this.speed = DIFICULTADES[dificultad] || DIFICULTADES.normal;
+
+		// Reinicia solo si el juego ya está en curso
+		if (this.isPlaying && !this.paused) {
+			clearInterval(this.gameInterval);
+			this.gameInterval = setInterval(this.step.bind(this), this.speed);
+		}
+	}
+
+	setNoWalls(estado) {
+		this.noWalls = estado;
+	}
+
+	setSnakeColor(fill, stroke) {
+		this.snakeColor.fill = fill;
+		this.snakeColor.stroke = stroke;
+	}
+
+	/* Inicialización */
 	initCanvas() {
 		this.canvas = document.createElement("canvas");
 		this.canvas.id = "snakeCanvas";
@@ -23,118 +79,107 @@ class Game {
 		this.context = this.canvas.getContext("2d");
 	}
 
+	initSounds() {
+		this.sonidos = {
+			movimiento: new Audio('sonidos/mover.mp3'),
+			comer: new Audio('sonidos/comer.mp3'),
+			perder: new Audio('sonidos/fin-juego.mp3')
+		};
+
+		this.sonidos.movimiento.volume = 0.4;
+	}
+
+	loadAssets() {
+		this.loadImage('img/manzana.png', (image) => {
+			this.foodImage = image;
+			this.clear();
+			this.drawSnake();
+			this.drawFood();
+		});
+	}
+
 	loadImage(src, callback) {
 		const image = new Image();
 		image.onload = () => callback(image);
 		image.src = src;
 	}
 
-	start() {
-		this.initSnake();
-		this.direction = DIRECTIONS.RIGHT;
-		this.score = 0;
-		this.addFood();
-		this.setupEventListeners();
-		this.loadAssets();
-
-		this.gameInterval = setInterval(this.step.bind(this), 100);
-	}
-	initSnake() {
-		this.snake = [];
-		// Asegurarse de que la serpiente se inicialice en la primera columna y en la fila central
-		this.snake.push({ x: 0, y: Math.floor(this.amount / 2) });
+	setupEventListeners() {
+		document.addEventListener("keydown", this.input.bind(this));
 	}
 
+
+	/* Funciones Visuales */
 	drawGrid() {
+
+		const { cellSizeX, cellSizeY } = this;
 		const ctx = this.context;
-		const gridSizeX = this.width / this.amount;
-		const gridSizeY = this.height / this.amount;
 
 		// Fondo Base
 		ctx.fillStyle = "#0f172a";
 		ctx.fillRect(0, 0, this.width, this.height);
 
-		// Lineas de cuadricula suaves
-		ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
-		ctx.lineWidth = 1;
+		if (this.showGrid) {
+			ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+			ctx.lineWidth = 1;
 
-		for (let x = 0; x <= this.width; x += gridSizeX) {
-			ctx.beginPath();
-			ctx.moveTo(x, 0);
-			ctx.lineTo(x, this.height);
-			ctx.stroke();
-		}
+			// Dibuja lineas verticales
+			for (let x = 0; x <= this.width; x += cellSizeX) {
+				ctx.beginPath();
+				ctx.moveTo(x, 0);
+				ctx.lineTo(x, this.height);
+				ctx.stroke();
+			}
 
-		for (let y = 0; y <= this.height; y += gridSizeY) {
-			ctx.beginPath();
-			ctx.moveTo(0, y);
-			ctx.lineTo(this.width, y);
-			ctx.stroke();
+			// Dibuja lineas horizontales
+			for (let y = 0; y <= this.height; y += cellSizeY) {
+				ctx.beginPath();
+				ctx.moveTo(0, y);
+				ctx.lineTo(this.width, y);
+				ctx.stroke();
+			}
 		}
 	}
+
 	drawSquare(x, y, color) {
-		this.context.fillStyle = color;
-		const gridSizeX = this.width / this.amount;
-		const gridSizeY = this.height / this.amount;
-		this.context.fillRect(x * gridSizeX, y * gridSizeY, gridSizeX, gridSizeY);
-	}
 
-	clear() {
-		this.drawGrid();
+		const { cellSizeX, cellSizeY } = this;
+		this.context.fillStyle = color;
+		this.context.fillRect(x * cellSizeX, y * cellSizeY, cellSizeX, cellSizeY);
 	}
 
 	drawSnake() {
 
-		const sizeX = this.width / this.amount;
-		const sizeY = this.height / this.amount;
+		const { cellSizeX, cellSizeY } = this;
 
 		this.snake.forEach(({ x, y }, index) => {
-			if (index === 0) {
-				this.drawSquare(x, y, "#10b981");
-				this.context.fillRect(x * sizeX, y * sizeY, sizeX, sizeY);
-			} else {
-				this.context.fillStyle = "#10b981";
-				this.context.fillRect(x * sizeX, y * sizeY, sizeX, sizeY);
+			const fill = this.snakeColor.fill || "#10b981";
+			const stroke = this.snakeColor.stroke || "#10b981";
 
-				this.context.strokeStyle = "#059669";
+			this.context.fillStyle = fill;
+			this.context.fillRect(x * cellSizeX, y * cellSizeY, cellSizeX, cellSizeY);
+
+			// Dibuja borde solo en las partes del cuerpo, no en la cabeza
+			if (index !== 0) {
+				this.context.strokeStyle = stroke;
 				this.context.lineWidth = 2;
-				this.context.strokeRect(x * sizeX + 1, y * sizeY + 1, sizeX - 2, sizeY - 2);
+				this.context.strokeRect(x * cellSizeX + 1, y * cellSizeY + 1, cellSizeX - 2, cellSizeY - 2);
 			}
+
 		});
 	}
 
-	drawHead(x, y) {
-		if (this.headImage) {
-			const imageSize = this.width / this.amount;
-			this.context.drawImage(this.headImage, x * imageSize, y * imageSize, imageSize, imageSize);
-		} else {
-			this.drawSquare(x, y, "red");
-		}
-	}
-
-	drawSnakeSegment(x, y) {
-		const sizeX = this.width / this.amount;
-		const sizeY = this.height / this.amount;
-		const borderWidth = 2;
-
-		this.context.fillStyle = "#61dafb";
-		this.context.fillRect(x * sizeX, y * sizeY, sizeX, sizeY);
-
-		this.context.strokeStyle = COLORS.SNAKE;
-		this.context.lineWidth = borderWidth;
-		this.context.strokeRect(x * sizeX + borderWidth / 2, y * sizeY + borderWidth / 2, sizeX - borderWidth, sizeY - borderWidth);
-	}
-
 	drawFood() {
+
+		const { cellSizeX, cellSizeY } = this;
+
 		if (this.foodImage) {
-			const cellWidth = this.width / this.amount;
-			const cellHeight = this.height / this.amount;
+			const imageWidth = cellSizeX * 1;
+			const imageHeight = cellSizeY * 1;
 
-			const imageWidth = cellWidth * 1;
-			const imageHeight = cellHeight * 1;
-
-			const drawX = this.food.x * cellWidth + (cellWidth - imageWidth) / 2;
-			const drawY = this.food.y * cellHeight + (cellHeight - imageHeight) / 2;
+			// Centrar la imagen de la comida
+			const drawX = this.food.x * cellSizeX + (cellSizeX - imageWidth) / 2;
+			const drawY = this.food.y * cellSizeY + (cellSizeY - imageHeight) / 2;
 
 			this.context.drawImage(
 				this.foodImage,
@@ -144,12 +189,49 @@ class Game {
 				imageHeight
 			);
 		} else {
-			this.drawSquare(this.food.x, this.food.y, COLORS.FOOD);
+			this.drawSquare(this.food.x, this.food.y, "#ec1337ff");
 		}
 	}
 
+	clear() {
+		this.drawGrid();
+	}
+
+
+	/***  LOGICA DEL JUEGO ***/
+	initSnake() {
+		this.snake = [];
+		// Inicia en la primera columna y fila central
+		this.snake.push({ x: 0, y: Math.floor(this.amount / 2) });
+	}
+
+	newTile() {
+
+		const { x, y } = this.snake[0];
+
+		const movement = {
+			[DIRECTIONS.LEFT]: { x: -1, y: 0 },
+			[DIRECTIONS.RIGHT]: { x: 1, y: 0 },
+			[DIRECTIONS.UP]: { x: 0, y: -1 },
+			[DIRECTIONS.DOWN]: { x: 0, y: 1 },
+		};
+
+		const move = movement[this.direction];
+		return { x: x + move.x, y: y + move.y };
+	}
+
 	collides(x, y) {
+		// Comprueba si la nueva cabeza colisiona con algunas partes del cuerpo
 		return this.snake.some((segment) => segment.x === x && segment.y === y);
+	}
+
+	isFoodOutsideBounds(x, y) {
+
+		const { cellSizeX, cellSizeY } = this;
+
+		// Verifica si la comida está fuera de los límites del juego
+		return x < 0 || x >= this.amount || y < 0 || y >= this.amount ||
+			x * cellSizeX >= this.width || y * cellSizeY >= this.height;
 	}
 
 	addFood() {
@@ -163,59 +245,38 @@ class Game {
 		this.food = { x: foodX, y: foodY };
 	}
 
-	isFoodOutsideBounds(x, y) {
-		const sizeX = this.width / this.amount;
-		const sizeY = this.height / this.amount;
-
-		// Verifica si la comida está fuera de los límites del juego
-		return x < 0 || x >= this.amount || y < 0 || y >= this.amount ||
-			x * sizeX >= this.width || y * sizeY >= this.height;
+	moveToOppositeSide(newHead) {
+		// Rebota tipo Pac-Man si atraviea bordes
+		if (newHead.x < 0) newHead.x = this.amount - 1;
+		if (newHead.x >= this.amount) newHead.x = 0;
+		if (newHead.y < 0) newHead.y = this.amount - 1;
+		if (newHead.y >= this.amount) newHead.y = 0;
 	}
 
-	newTile() {
-		let headX = this.snake[0].x;
-		let headY = this.snake[0].y;
-
-		switch (this.direction) {
-			case DIRECTIONS.LEFT:
-				headX = (headX - 1);
-				break;
-			case DIRECTIONS.RIGHT:
-				headX = (headX + 1);
-				break;
-			case DIRECTIONS.UP:
-				headY = (headY - 1);
-				break;
-			case DIRECTIONS.DOWN:
-				headY = (headY + 1);
-				break;
-		}
-
-		return { x: headX, y: headY };
+	isOutsideGameArea(newHead) {
+		return (newHead.x < 0 || newHead.x >= this.amount || newHead.y < 0 || newHead.y >= this.amount);
 	}
 
 	step() {
+
 		let newHead = this.newTile();
 
-		// Verifica si la cabeza de la serpiente está fuera de los límites
-		if (
-			newHead.x < 0 ||
-			newHead.x >= this.amount ||
-			newHead.y < 0 ||
-			newHead.y >= this.amount ||
-			this.collides(newHead.x, newHead.y)
-		) {
-			clearInterval(this.gameInterval);
-			if (this.onGameOver) this.onGameOver();
-			return;
+		if (this.noWalls) {
+			this.moveToOppositeSide(newHead);
+		} else if (this.isOutsideGameArea(newHead)) {
+			this.handleGameOver();
+		}
+
+		if (this.collides(newHead.x, newHead.y)) {
+			this.handleGameOver();
 		}
 
 		this.snake.unshift(newHead);
 
 		if (this.food && this.food.x === newHead.x && this.food.y === newHead.y) {
+			this.playSound("comer");
 			this.addFood();
-			this.score++; // Incrementa la puntuación
-			// Actualiza el contenido del elemento span con la puntuación actualizada
+			this.score++;
 			document.getElementById("puntuacion").innerText = this.score;
 
 		} else {
@@ -225,67 +286,119 @@ class Game {
 		this.clear();
 		this.drawSnake();
 		this.drawFood();
-
 	}
 
-	setupEventListeners() {
-		document.addEventListener("keydown", this.input.bind(this));
+	/*** CONTROL DEL JUEGO ***/
+	start() {
+		this.stop();
+		this.paused = false;
+		this.isGameOver = false;
+
+		this.speed = DIFICULTADES[this.dificultad] || DIFICULTADES.normal;
+
+		this.initSnake();
+		this.direction = DIRECTIONS.RIGHT;
+		this.score = 0;
+		this.addFood();
+		this.setupEventListeners();
+		this.loadAssets();
+
+		this.startWithDelay();
+	}
+
+	stop(pauseOnly = false) {
+		clearInterval(this.gameInterval);
+
+		this.paused = true;
+
+		if (!pauseOnly) {
+
+			this.isPlaying = false;
+		}
+	}
+
+	resume() {
+		if (this.isPlaying && this.paused) {
+			this.paused = false;
+			this.isPlaying = false;
+
+			this.startWithDelay();
+		}
+	}
+
+	playSound(nombre, onEnded) {
+		const sound = this.sonidos?.[nombre];
+
+		if (sound) {
+			const instancia = sound.cloneNode();
+			instancia.volume = sound.muted ? 0 : 1;
+			instancia.currentTime = 0;
+
+			if (typeof onEnded === "function") {
+				instancia.onended = onEnded;
+			}
+
+			instancia.play();
+		}
+	}
+
+	handleGameOver() {
+		clearInterval(this.gameInterval);
+		this.isGameOver = true;
+		this.isPlaying = false;
+		this.paused = false;
+
+		if (this.sonidos?.perder) {
+			this.playSound("perder", () => {
+				if (this.onGameOver) this.onGameOver();
+			});
+		} else if (this.onGameOver) this.onGameOver();
+
 	}
 
 	input(e) {
-		switch (e.keyCode) {
-			case 37:
-			case 65: // Tecla A
+
+		if (!this.isPlaying || this.paused || this.isGameOver) return;
+
+		let nuevaDireccion = this.direction;
+
+		switch (e.key.toLowerCase()) {
+			case 'arrowleft':
+			case 'a':
 				if (this.direction !== DIRECTIONS.RIGHT) {
 					this.direction = DIRECTIONS.LEFT;
 				}
 				break;
-			case 38:
-			case 87: // Tecla W
+			case 'arrowup':
+			case 'w':
 				if (this.direction !== DIRECTIONS.DOWN) {
 					this.direction = DIRECTIONS.UP;
 				}
 				break;
-			case 39:
-			case 68: // Tecla D
+			case 'arrowright':
+			case 'd':
 				if (this.direction !== DIRECTIONS.LEFT) {
 					this.direction = DIRECTIONS.RIGHT;
 				}
 				break;
-			case 40:
-			case 83: // Tecla S
+			case 'arrowdown':
+			case 's':
 				if (this.direction !== DIRECTIONS.UP) {
 					this.direction = DIRECTIONS.DOWN;
 				}
 				break;
 		}
+
+		if (nuevaDireccion != this.direction && this.sonidos?.movimiento) {
+			this.playSound("movimiento");
+		}
 	}
 
-	loadAssets() {
-		this.loadImage('img/manzana.png', (image) => {
-			this.foodImage = image;
-			this.clear();
-			this.drawSnake();
-			this.drawFood();
-		});
-	}
-
-	// Nueva función para detener el juego
-	stop() {
-		clearInterval(this.gameInterval);
-	}
-
-	// Nueva función para reiniciar el juego
-	restart() {
-		this.stop();
-		this.initSnake();
-		this.direction = DIRECTIONS.RIGHT;
-		this.score = 0;
-		this.addFood();
-		this.clear();
-		this.drawSnake();
-		this.drawFood();
-		this.gameInterval = setInterval(this.step.bind(this), 100);
+	startWithDelay() {
+		setTimeout(() => {
+			this.isPlaying = true;
+			this.gameInterval = setInterval(this.step.bind(this), this.speed);
+		}, 3000);
 	}
 }
 
